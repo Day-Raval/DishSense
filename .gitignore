@@ -1,0 +1,8 @@
+data/raw/
+data/recipe_db/
+.env
+__pycache__/
+*.pyc
+*.pth
+*.onnx
+.DS_Store
