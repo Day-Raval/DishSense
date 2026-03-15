@@ -257,7 +257,6 @@ For production readiness, consider:
 
 ## 🗺️ Roadmap
 
-- [ ] Calibrate ingredient confidence across ensemble models.
 - [ ] Add recipe filtering by dietary constraints/allergens.
 - [ ] Add evaluation harness for retrieval precision/recall.
 - [ ] Add Docker + CI/CD pipeline.
