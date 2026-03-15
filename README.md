@@ -1,25 +1,24 @@
-# FRIDGE-RAG
+# 🧊🍳 FRIDGE-RAG
 
-Turn a fridge snapshot into practical, constraint-aware meal options using computer vision + retrieval-augmented generation.
-
----
-
-## Why this project exists
-
-Most "what can I cook?" demos stop at ingredient detection. In real kitchens, users also care about:
-
-- **What they can cook right now** with available items.
-- **How confident the system is** about detected ingredients.
-- **Why a recipe was recommended** (traceable retrieval evidence).
-- **How to run the stack reliably** in a production-like environment.
-
-FRIDGE-RAG is structured as a real-world prototype that separates ingestion, retrieval, ranking, and serving concerns so the system can evolve without a full rewrite.
+> **From fridge photo ➜ confident ingredients ➜ useful recipes**  
+> A practical, production-minded prototype that combines **computer vision** and **retrieval-augmented generation (RAG)** for real kitchen decisions.
 
 ---
 
-## System architecture (real-world oriented)
+## ✨ What this project does
 
-### 1) Runtime request flow
+Most "what can I cook?" demos stop at simple ingredient detection. **FRIDGE-RAG** goes further:
+
+- 🥕 Detects fridge ingredients using an **ensemble of vision models**.
+- 📚 Retrieves relevant recipes from a **semantic vector database**.
+- 🧠 Re-ranks candidates with an LLM and provides **clear rationale**.
+- 🏗️ Separates concerns (API, orchestration, vision, retrieval, UI) for maintainability.
+
+---
+
+## 🧭 End-to-end architecture
+
+### 1) Runtime flow
 
 ```text
 [Client App / Streamlit UI]
@@ -44,7 +43,7 @@ FRIDGE-RAG is structured as a real-world prototype that separates ingestion, ret
          [Ranked recipe candidates + rationale]
 ```
 
-### 2) Offline data/index flow
+### 2) Offline indexing flow
 
 ```text
 [Kaggle recipe dataset]
@@ -59,25 +58,9 @@ FRIDGE-RAG is structured as a real-world prototype that separates ingestion, ret
    [Local Chroma recipe index]
 ```
 
-### 3) Production responsibilities by layer
-
-- **API layer (`api/`)**
-  - Input validation and response contracts.
-  - Health endpoints and request-level error handling.
-- **Orchestration layer (`src/pipeline.py`)**
-  - Coordinates vision inference, retrieval, and reranking.
-  - Keeps business flow centralized and testable.
-- **Vision layer (`src/vision/`)**
-  - Multi-model ingredient detection to reduce single-model blind spots.
-- **RAG layer (`src/rag/`)**
-  - Builds and queries recipe embeddings.
-  - Supports semantic matching over free-form ingredient context.
-- **UI layer (`dashboard/`)**
-  - Thin client for demos and operator validation.
-
 ---
 
-## Repository layout
+## 🗂️ Repository layout
 
 ```bash
 FRIDGE-RAG/
@@ -96,30 +79,30 @@ FRIDGE-RAG/
 
 ---
 
-## Technology choices
+## 🧰 Tech stack
 
-- **Backend API:** FastAPI + Uvicorn
-- **UI:** Streamlit
-- **Vision models:** YOLOv8, DETR, CLIP (ensemble strategy)
-- **Embeddings:** sentence-transformers (`all-MiniLM-L6-v2`)
-- **Vector store:** ChromaDB
-- **LLM layer:** OpenAI models for reranking/explanations
-- **Dataset:** Food.com Recipes and Reviews (Kaggle)
+- ⚡ **Backend API:** FastAPI + Uvicorn
+- 🖥️ **UI:** Streamlit
+- 👁️ **Vision models:** YOLOv8, DETR, CLIP (ensemble strategy)
+- 🔎 **Embeddings:** sentence-transformers (`all-MiniLM-L6-v2`)
+- 🧱 **Vector store:** ChromaDB
+- 🤖 **LLM layer:** OpenAI models for reranking/explanations
+- 🍲 **Dataset:** Food.com Recipes and Reviews (Kaggle)
 
-Dataset: https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews/data
+Dataset link: https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews/data
 
 ---
 
-## Quick start
+## 🚀 Quick start
 
-### Prerequisites
+### 1) Prerequisites
 
 - Python 3.10+
 - `pip` and virtual environment tooling
 - Kaggle API credentials
 - OpenAI API key
 
-### Install
+### 2) Install
 
 ```bash
 git clone <your-repo-url>
@@ -129,19 +112,19 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Configure env
+### 3) Configure environment
 
 ```bash
 cp .env.example .env
 ```
 
-Set:
+Add your key:
 
 ```env
 OPENAI_API_KEY=your_openai_key
 ```
 
-### Configure Kaggle credentials
+### 4) Configure Kaggle credentials
 
 ```bash
 mkdir -p ~/.kaggle
@@ -149,7 +132,7 @@ echo '{"username":"YOUR_KAGGLE_USERNAME","key":"YOUR_KAGGLE_KEY"}' > ~/.kaggle/k
 chmod 600 ~/.kaggle/kaggle.json
 ```
 
-### Build vector index
+### 5) Build the vector database
 
 ```bash
 python scripts/build_vectordb.py
@@ -157,7 +140,7 @@ python scripts/build_vectordb.py
 
 ---
 
-## Run locally
+## ▶️ Run locally
 
 ### API
 
@@ -173,13 +156,13 @@ streamlit run dashboard/app.py
 
 ---
 
-## Testing
+## ✅ Testing
 
 ```bash
 pytest tests/ -v
 ```
 
-Optional:
+Optional focused runs:
 
 ```bash
 pytest tests/test_pipeline.py -v
@@ -189,11 +172,41 @@ pytest tests/test_rag.py -v
 
 ---
 
-## Operational notes
+## 📁 Why `data/` is not on GitHub (but appears locally)
 
-- `data/` artifacts are intentionally local and typically git-ignored.
+This is intentional and important.
+
+### Short answer
+
+- 🚫 `data/` is usually listed in `.gitignore`, so Git does **not** track or upload it.
+- 💻 When you run local setup/indexing scripts, they **create `data/` on your machine**.
+- 👀 Your coding editor (VS Code, Cursor, PyCharm, etc.) shows **local folders**, not only tracked Git files.
+
+So even if GitHub does not display `data/`, your editor will show it once created locally.
+
+### Why we do this
+
+Keeping `data/` out of GitHub helps avoid:
+
+- oversized repositories and slow clones,
+- committing generated artifacts repeatedly,
+- accidental exposure of local or licensed dataset outputs,
+- noisy diffs from frequently regenerated indexes.
+
+### Typical local workflow
+
+1. Clone repository from GitHub (no `data/` yet).
+2. Run setup/build commands (`scripts/build_vectordb.py`).
+3. Script generates local artifacts under `data/`.
+4. Editor displays the folder immediately.
+5. Git still ignores it, so `git status` stays clean for those files.
+
+---
+
+## 🛠️ Operational notes
+
 - Rebuild the vector index whenever recipe corpus or embedding model changes.
-- For deployment hardening, add:
+- For production hardening, add:
   - containerized services,
   - centralized logging/tracing,
   - secret management,
@@ -202,9 +215,23 @@ pytest tests/test_rag.py -v
 
 ---
 
+## 🗺️ Roadmap
+
+- Add dietary and allergen-aware filtering.
 ## Roadmap
 - Add the aspect of CAG as well, i.e., Caching instead of Retrieving by loading all content to the KV cache 
 - Add dietary and allergen-aware filters.
 - Add retrieval quality evaluation (Precision@K / Recall@K).
 - Add Dockerized local stack and CI checks.
-- Add feedback loop for improving ranking quality.
+- Add feedback loop for ranking quality improvements.
+
+---
+
+## 🤝 Contributing
+
+PRs and ideas are welcome. If you propose architecture or pipeline changes, include:
+
+- motivation,
+- impact on retrieval quality,
+- expected runtime/memory tradeoffs,
+- testing evidence.
