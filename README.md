@@ -200,11 +200,12 @@ OPENAI_API_KEY=your_real_openai_key
 ### Dataset Setup
 
 1. Create a Kaggle API token at: https://www.kaggle.com/settings
-2. Place the token file:
+2. Download the `kaggle.json` file from your Kaggle account page.
+3. Place the token file:
 
 ```bash
 mkdir -p ~/.kaggle
-echo '{"username":"YOUR_KAGGLE_USERNAME","key":"YOUR_KAGGLE_KEY"}' > ~/.kaggle/kaggle.json
+mv /path/to/downloads/kaggle.json ~/.kaggle/kaggle.json
 chmod 600 ~/.kaggle/kaggle.json
 ```
 
