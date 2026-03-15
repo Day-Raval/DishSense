@@ -208,14 +208,6 @@ echo '{"username":"YOUR_KAGGLE_USERNAME","key":"YOUR_KAGGLE_KEY"}' > ~/.kaggle/k
 chmod 600 ~/.kaggle/kaggle.json
 ```
 
-### Build the Vector Database
-
-```bash
-python scripts/build_vectordb.py
-```
-
-> ⏱️ First indexing run can take several minutes depending on dataset size and machine resources.
-
 ---
 
 ## ▶️ Run the Application
