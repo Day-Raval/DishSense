@@ -218,6 +218,9 @@ Keeping `data/` out of GitHub helps avoid:
 ## 🗺️ Roadmap
 
 - Add dietary and allergen-aware filtering.
+## Roadmap
+- Add the aspect of CAG as well, i.e., Caching instead of Retrieving by loading all content to the KV cache 
+- Add dietary and allergen-aware filters.
 - Add retrieval quality evaluation (Precision@K / Recall@K).
 - Add Dockerized local stack and CI checks.
 - Add feedback loop for ranking quality improvements.
