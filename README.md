@@ -245,15 +245,16 @@ pytest -q
 
 ## 📁 Why the `data/` folder is not on GitHub
 
-Short answer: **it is intentionally git-ignored.**
+Short answer: **its generated contents are git-ignored, and Git does not track empty directories.**
 
 - In this project, generated/downloaded assets under `data/raw/` and `data/recipe_db/` are excluded in `.gitignore`.
-- GitHub only shows tracked files; ignored local folders are not pushed, so they do not appear in the remote repository.
+- The `data/` directory itself is created locally by setup scripts; if it only contains ignored paths (like `data/raw/` and `data/recipe_db/`), Git treats it as effectively empty.
+- Git does not track empty directories, so a `data/` folder that only holds ignored content will not be committed or shown on GitHub.
 - Your coding editor (VS Code, Cursor, PyCharm, etc.) shows files/folders that exist on disk locally, whether tracked by Git or not.
 
 ✅ So it is normal that:
 - You can see `data/` locally after running setup scripts.
-- You do **not** see `data/` on GitHub.
+- You do **not** see `data/` on GitHub when it only contains ignored/generated data.
 
 This keeps the repository lightweight and avoids committing large, reproducible data artifacts.
 
