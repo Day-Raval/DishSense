@@ -90,24 +90,18 @@ flowchart LR
     CDN --> LB[Load Balancer / API Gateway]
 
     LB --> API[FastAPI Service]
-    API --> Q[Async Queue
-Celery / Redis / SQS]
-    Q --> VISION[Vision Worker Pool
-YOLOv8 + DETR + CLIP]
-    Q --> RAG[RAG Worker Pool
-Embed + Retrieve + Re-rank]
+    API --> Q[Async Queue<br/>Celery / Redis / SQS]
+    Q --> VISION[Vision Worker Pool<br/>YOLOv8 + DETR + CLIP]
+    Q --> RAG[RAG Worker Pool<br/>Embed + Retrieve + Re-rank]
 
     RAG --> VDB[(ChromaDB / Vector Store)]
     RAG --> CACHE[(Redis Cache)]
     RAG --> LLM[OpenAI / LLM Provider]
 
-    API --> PG[(PostgreSQL
-Metadata + Audit Logs)]
-    API --> OBJ[(Object Storage
-S3 / Blob for image uploads)]
+    API --> PG[(PostgreSQL<br/>Metadata + Audit Logs)]
+    API --> OBJ[(Object Storage<br/>S3 / Blob for image uploads)]
 
-    API --> OBS[Observability
-Logs + Metrics + Traces]
+    API --> OBS[Observability<br/>Logs + Metrics + Traces]
     VISION --> OBS
     RAG --> OBS
 
