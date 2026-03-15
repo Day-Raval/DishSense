@@ -1,58 +1,65 @@
-# FRIDGE-RAG 🧊🍳
+# 🧊🍳 FRIDGE-RAG
 
-Production-ready blueprint for a **multimodal recipe recommendation system** that turns a fridge photo into meal ideas using computer vision + retrieval-augmented generation (RAG).
+<p align="center">
+  <b>Turn a fridge photo into practical recipe ideas with multimodal AI + Retrieval-Augmented Generation (RAG).</b>
+</p>
 
-> **Concept:** Upload a fridge image → detect available ingredients → retrieve matching recipes from a vector database → generate practical cooking suggestions.
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-API-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
+  <img alt="Streamlit" src="https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" />
+  <img alt="ChromaDB" src="https://img.shields.io/badge/ChromaDB-Vector%20Store-6D28D9?style=for-the-badge" />
+</p>
+
+> ✨ **Pipeline at a glance:** Upload fridge image → detect ingredients → retrieve relevant recipes → generate explainable cooking suggestions.
 
 ---
 
-## Table of Contents
+## 📚 Table of Contents
 
-- [Overview](#overview)
-- [Core Capabilities](#core-capabilities)
-- [System Architecture](#system-architecture)
-- [Project Structure](#project-structure)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
+- [🔎 Overview](#-overview)
+- [🚀 Core Capabilities](#-core-capabilities)
+- [🧠 System Architecture](#-system-architecture)
+- [🗂️ Project Structure](#️-project-structure)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [⚡ Quick Start](#-quick-start)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Environment Variables](#environment-variables)
-  - [Download Dataset](#download-dataset)
-  - [Build Vector Database](#build-vector-database)
-- [Run the Application](#run-the-application)
-  - [Start API](#start-api)
-  - [Start Dashboard](#start-dashboard)
-- [Testing](#testing)
-- [Operational Guidance](#operational-guidance)
-- [Troubleshooting](#troubleshooting)
-- [Roadmap](#roadmap)
-- [License](#license)
+  - [Dataset Setup](#dataset-setup)
+  - [Build the Vector Database](#build-the-vector-database)
+- [▶️ Run the Application](#️-run-the-application)
+- [🧪 Testing](#-testing)
+- [📁 Why the `data/` folder is not on GitHub](#-why-the-data-folder-is-not-on-github)
+- [🧭 Operational Guidance](#-operational-guidance)
+- [🆘 Troubleshooting](#-troubleshooting)
+- [🗺️ Roadmap](#️-roadmap)
 
 ---
 
-## Overview
+## 🔎 Overview
 
 FRIDGE-RAG combines:
 
-1. **Vision models** (YOLOv8 + DETR + CLIP) to infer ingredients from fridge images.
-2. **Semantic retrieval** (SentenceTransformer embeddings + ChromaDB) to fetch relevant recipes.
-3. **LLM reasoning** (OpenAI GPT models) to rank, explain, and personalize recipe recommendations.
+1. 👁️ **Vision models** (YOLOv8 + DETR + CLIP) to infer ingredients from fridge images.
+2. 🧾 **Semantic retrieval** (SentenceTransformer embeddings + ChromaDB) to fetch matching recipes.
+3. 🤖 **LLM reasoning** (OpenAI GPT models) to rank, explain, and personalize recommendations.
 
-The repository currently provides a clean project scaffold with scripts, API, dashboard, and test folders ready for implementation.
+This repository provides a clean, production-oriented scaffold with API, dashboard, scripts, and test structure ready for implementation and scaling.
 
 ---
 
-## Core Capabilities
+## 🚀 Core Capabilities
 
 - 📷 **Image-to-ingredient extraction** from fridge snapshots.
-- 🧠 **RAG-based recipe retrieval** over a large recipe dataset.
-- 🥗 **Context-aware suggestions** (e.g., based on detected ingredients).
-- ⚡ **FastAPI backend** for model + retrieval orchestration.
-- 📊 **Streamlit UI** for rapid experimentation and demos.
+- 🧠 **RAG-based retrieval** over a large recipe dataset.
+- 🥗 **Context-aware suggestions** using detected fridge contents.
+- ⚡ **FastAPI backend** for orchestration and serving.
+- 📊 **Streamlit dashboard** for demos and interactive prototyping.
 
 ---
 
-## System Architecture
+## 🧠 System Architecture
 
 ```text
 [Fridge Image]
@@ -81,7 +88,7 @@ The repository currently provides a clean project scaffold with scripts, API, da
 
 ---
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```bash
 FRIDGE-RAG/
@@ -90,6 +97,7 @@ FRIDGE-RAG/
 ├── scripts/              # Data download + vector DB build scripts
 ├── src/                  # Core pipeline/config modules
 ├── tests/                # Unit/integration test suite
+├── data/                 # Local-only generated/downloaded assets (git-ignored)
 ├── .env.example          # Environment variable template
 ├── requirements.txt      # Python dependencies
 └── README.md
@@ -97,7 +105,7 @@ FRIDGE-RAG/
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 - **Vision:** YOLOv8, DETR, CLIP (open-clip)
 - **Embeddings:** `sentence-transformers` (`all-MiniLM-L6-v2`)
@@ -105,20 +113,19 @@ FRIDGE-RAG/
 - **LLM:** OpenAI API (e.g., GPT-4o-mini)
 - **Backend:** FastAPI + Uvicorn
 - **Frontend:** Streamlit (+ Plotly for visualization)
-- **Data:** Food.com Recipes and Reviews (Kaggle)
+- **Dataset:** Food.com Recipes and Reviews (Kaggle)
 
-Dataset source:
-- https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews/data
+🔗 Dataset source: https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews/data
 
 ---
 
-## Getting Started
+## ⚡ Quick Start
 
 ### Prerequisites
 
-- Python **3.10+** recommended
-- `pip` / virtual environment tooling
-- Kaggle API credentials (`~/.kaggle/kaggle.json`) for dataset download
+- Python **3.10+**
+- `pip` + virtual environment tooling
+- Kaggle API credentials (`~/.kaggle/kaggle.json`)
 - OpenAI API key
 
 ### Installation
@@ -128,7 +135,7 @@ Dataset source:
 git clone <your-repo-url>
 cd FRIDGE-RAG
 
-# 2) (Recommended) Create and activate virtual environment
+# 2) Create and activate a virtual environment
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
@@ -148,25 +155,28 @@ Update `.env`:
 OPENAI_API_KEY=your_real_openai_key
 ```
 
-### Download Dataset
-Get your token from https://www.kaggle.com/settings → API → Create New Token
-### Then run:
+### Dataset Setup
+
+1. Create a Kaggle API token at: https://www.kaggle.com/settings
+2. Place the token file:
+
 ```bash
+mkdir -p ~/.kaggle
 echo '{"username":"YOUR_KAGGLE_USERNAME","key":"YOUR_KAGGLE_KEY"}' > ~/.kaggle/kaggle.json
 chmod 600 ~/.kaggle/kaggle.json
 ```
 
-### Build Vector Database
+### Build the Vector Database
 
 ```bash
 python scripts/build_vectordb.py
 ```
 
-> First indexing run can take several minutes depending on dataset size and machine resources.
+> ⏱️ First indexing run can take several minutes depending on dataset size and machine resources.
 
 ---
 
-## Run the Application
+## ▶️ Run the Application
 
 ### Start API
 
@@ -184,9 +194,7 @@ streamlit run dashboard/app.py
 
 ---
 
-## Testing
-
-Run all tests:
+## 🧪 Testing
 
 ```bash
 pytest tests/ -v
@@ -201,46 +209,56 @@ pytest -q
 
 ---
 
-## Operational Guidance
+## 📁 Why the `data/` folder is not on GitHub
 
-For production readiness, consider the following:
+Short answer: **it is intentionally git-ignored.**
 
-- **Model lifecycle:** version and pin all model artifacts.
-- **Data contracts:** enforce strict request/response schemas in API.
-- **Observability:** add structured logging, request tracing, and metrics.
-- **Caching:** cache embeddings and frequent retrieval queries.
-- **Guardrails:** validate image types/sizes and sanitize user text input.
-- **Deployment:** containerize API/dashboard and deploy behind a reverse proxy.
-- **Security:** store secrets in a vault/secret manager (not plaintext files).
+- In this project, generated/downloaded assets under `data/raw/` and `data/recipe_db/` are excluded in `.gitignore`.
+- GitHub only shows tracked files; ignored local folders are not pushed, so they do not appear in the remote repository.
+- Your coding editor (VS Code, Cursor, PyCharm, etc.) shows files/folders that exist on disk locally, whether tracked by Git or not.
+
+✅ So it is normal that:
+- You can see `data/` locally after running setup scripts.
+- You do **not** see `data/` on GitHub.
+
+This keeps the repository lightweight and avoids committing large, reproducible data artifacts.
 
 ---
 
-## Troubleshooting
+## 🧭 Operational Guidance
+
+For production readiness, consider:
+
+- 📦 **Model lifecycle:** pin and version model artifacts.
+- 📐 **Data contracts:** enforce strict API schemas.
+- 📈 **Observability:** add structured logs, traces, and metrics.
+- ⚡ **Caching:** cache embeddings and frequent retrievals.
+- 🛡️ **Guardrails:** validate image inputs and sanitize user text.
+- 🚢 **Deployment:** containerize API/dashboard and add reverse proxy.
+- 🔐 **Security:** store secrets in a vault or secret manager.
+
+---
+
+## 🆘 Troubleshooting
 
 - **Kaggle download fails**
-  - Ensure `~/.kaggle/kaggle.json` exists and has proper permissions.
+  - Ensure `~/.kaggle/kaggle.json` exists with `chmod 600` permissions.
 
-- **OpenAI errors (`401` / auth)**
-  - Verify `OPENAI_API_KEY` in `.env`.
+- **OpenAI auth errors (`401`)**
+  - Verify `OPENAI_API_KEY` is set in `.env`.
 
-- **Slow retrieval/indexing**
-  - Rebuild vector DB on SSD and reduce dataset size for local testing.
+- **Slow indexing/retrieval**
+  - Rebuild vector DB on SSD and/or reduce local dataset size.
 
-- **Torch/vision install issues**
-  - Match Torch build to your CUDA/CPU environment.
+- **Torch/vision installation issues**
+  - Match Torch install to your CPU/CUDA environment.
 
 ---
 
-## Roadmap
+## 🗺️ Roadmap
 
-- [ ] Implement ingredient confidence calibration across ensemble models.
+- [ ] Calibrate ingredient confidence across ensemble models.
 - [ ] Add recipe filtering by dietary constraints/allergens.
 - [ ] Add evaluation harness for retrieval precision/recall.
 - [ ] Add Docker + CI/CD pipeline.
 - [ ] Add end-to-end integration tests and benchmark suite.
-
----
-
-## License
-
-Add your license here (e.g., MIT, Apache-2.0).
