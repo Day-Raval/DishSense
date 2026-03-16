@@ -1,182 +1,154 @@
-# FRIDGE-RAG 🧊🍳
+# 🧊🍳 FRIDGE-RAG
 
-Production-ready blueprint for a **multimodal recipe recommendation system** that turns a fridge photo into meal ideas using computer vision + retrieval-augmented generation (RAG).
-
-> **Concept:** Upload a fridge image → detect available ingredients → retrieve matching recipes from a vector database → generate practical cooking suggestions.
-
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Core Capabilities](#core-capabilities)
-- [System Architecture](#system-architecture)
-- [Project Structure](#project-structure)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Environment Variables](#environment-variables)
-  - [Download Dataset](#download-dataset)
-  - [Build Vector Database](#build-vector-database)
-- [Run the Application](#run-the-application)
-  - [Start API](#start-api)
-  - [Start Dashboard](#start-dashboard)
-- [Testing](#testing)
-- [Operational Guidance](#operational-guidance)
-- [Troubleshooting](#troubleshooting)
-- [Roadmap](#roadmap)
-- [License](#license)
+> **From fridge photo ➜ confident ingredients ➜ useful recipes**  
+> A practical, production-minded prototype that combines **computer vision** and **retrieval-augmented generation (RAG)** for real kitchen decisions.
 
 ---
 
-## Overview
+## ✨ What this project does
 
-FRIDGE-RAG combines:
+Most "what can I cook?" demos stop at simple ingredient detection. **FRIDGE-RAG** goes further:
 
-1. **Vision models** (YOLOv8 + DETR + CLIP) to infer ingredients from fridge images.
-2. **Semantic retrieval** (SentenceTransformer embeddings + ChromaDB) to fetch relevant recipes.
-3. **LLM reasoning** (OpenAI GPT models) to rank, explain, and personalize recipe recommendations.
-
-The repository currently provides a clean project scaffold with scripts, API, dashboard, and test folders ready for implementation.
-
----
-
-## Core Capabilities
-
-- 📷 **Image-to-ingredient extraction** from fridge snapshots.
-- 🧠 **RAG-based recipe retrieval** over a large recipe dataset.
-- 🥗 **Context-aware suggestions** (e.g., based on detected ingredients).
-- ⚡ **FastAPI backend** for model + retrieval orchestration.
-- 📊 **Streamlit UI** for rapid experimentation and demos.
+- 🥕 Detects fridge ingredients using an **ensemble of vision models**.
+- 📚 Retrieves relevant recipes from a **semantic vector database**.
+- 🧠 Re-ranks candidates with an LLM and provides **clear rationale**.
+- 🏗️ Separates concerns (API, orchestration, vision, retrieval, UI) for maintainability.
 
 ---
 
-## System Architecture
+## 🧭 End-to-end architecture
+
+### 1) Runtime flow
 
 ```text
-[Fridge Image]
-     │
-     ▼
-[Vision Ensemble: YOLOv8 + DETR + CLIP]
-     │
-     ▼
-[Detected Ingredients]
-     │
-     ▼
-[Embedding Model: all-MiniLM-L6-v2]
-     │
-     ▼
-[ChromaDB Recipe Index]
-     │
-     ▼
-[Top-K Candidate Recipes]
-     │
-     ▼
-[LLM Re-ranker / Explainer]
-     │
-     ▼
-[Final Recommended Recipes]
+[Client App / Streamlit UI]
+            |
+            v
+      [FastAPI Gateway]
+            |
+            v
+   [Pipeline Orchestrator]
+     |               |
+     |               +--------------------------+
+     v                                          v
+[Vision Ensemble]                          [RAG Service]
+(YOLO + DETR + CLIP)        query ---> [Embedding + Chroma Retrieval]
+     |                                          |
+     +------ detected ingredients --------------+
+                         |
+                         v
+               [LLM Re-ranker / Explainer]
+                         |
+                         v
+         [Ranked recipe candidates + rationale]
+```
+
+### 2) Offline indexing flow
+
+```text
+[Kaggle recipe dataset]
+          |
+          v
+ [scripts/build_vectordb.py]
+  - cleaning
+  - chunking/formatting
+  - embedding generation
+          |
+          v
+   [Local Chroma recipe index]
 ```
 
 ---
 
-## Project Structure
+## 🗂️ Repository layout
 
 ```bash
 FRIDGE-RAG/
-├── api/                  # FastAPI app and request/response schemas
-├── dashboard/            # Streamlit dashboard
-├── scripts/              # Data download + vector DB build scripts
-├── src/                  # Core pipeline/config modules
-├── tests/                # Unit/integration test suite
-├── .env.example          # Environment variable template
-├── requirements.txt      # Python dependencies
+├── api/                  # FastAPI app + schemas
+├── dashboard/            # Streamlit front-end
+├── scripts/              # Offline jobs (index build)
+├── src/
+│   ├── pipeline.py       # End-to-end orchestration
+│   ├── config.py         # Runtime configuration
+│   ├── rag/              # Ingestion, retrieval, reranking
+│   └── vision/           # YOLO/DETR/CLIP + ensemble logic
+├── tests/                # Unit/integration-oriented tests
+├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## Tech Stack
+## 🧰 Tech stack
 
-- **Vision:** YOLOv8, DETR, CLIP (open-clip)
-- **Embeddings:** `sentence-transformers` (`all-MiniLM-L6-v2`)
-- **Vector Database:** ChromaDB
-- **LLM:** OpenAI API (e.g., GPT-4o-mini)
-- **Backend:** FastAPI + Uvicorn
-- **Frontend:** Streamlit (+ Plotly for visualization)
-- **Data:** Food.com Recipes and Reviews (Kaggle)
+- ⚡ **Backend API:** FastAPI + Uvicorn
+- 🖥️ **UI:** Streamlit
+- 👁️ **Vision models:** YOLOv8, DETR, CLIP (ensemble strategy)
+- 🔎 **Embeddings:** sentence-transformers (`all-MiniLM-L6-v2`)
+- 🧱 **Vector store:** ChromaDB
+- 🤖 **LLM layer:** OpenAI models for reranking/explanations
+- 🍲 **Dataset:** Food.com Recipes and Reviews (Kaggle)
 
-Dataset source:
-- https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews/data
+Dataset link: https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews/data
 
 ---
 
-## Getting Started
+## 🚀 Quick start
 
-### Prerequisites
+### 1) Prerequisites
 
-- Python **3.10+** recommended
-- `pip` / virtual environment tooling
-- Kaggle API credentials (`~/.kaggle/kaggle.json`) for dataset download
+- Python 3.10+
+- `pip` and virtual environment tooling
+- Kaggle API credentials
 - OpenAI API key
 
-### Installation
+### 2) Install
 
 ```bash
-# 1) Clone repository
 git clone <your-repo-url>
 cd FRIDGE-RAG
-
-# 2) (Recommended) Create and activate virtual environment
 python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-
-# 3) Install dependencies
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Environment Variables
+### 3) Configure environment
 
 ```bash
 cp .env.example .env
 ```
 
-Update `.env`:
+Add your key:
 
 ```env
-OPENAI_API_KEY=your_real_openai_key
+OPENAI_API_KEY=your_openai_key
 ```
 
-### Download Dataset
-Get your token from https://www.kaggle.com/settings → API → Create New Token
-### Then run:
+### 4) Configure Kaggle credentials
+
 ```bash
+mkdir -p ~/.kaggle
 echo '{"username":"YOUR_KAGGLE_USERNAME","key":"YOUR_KAGGLE_KEY"}' > ~/.kaggle/kaggle.json
 chmod 600 ~/.kaggle/kaggle.json
 ```
 
-### Build Vector Database
+### 5) Build the vector database
 
 ```bash
 python scripts/build_vectordb.py
 ```
 
-> First indexing run can take several minutes depending on dataset size and machine resources.
-
 ---
 
-## Run the Application
+## ▶️ Run locally
 
-### Start API
+### API
 
 ```bash
 uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Start Dashboard
-
-In another terminal:
+### Dashboard
 
 ```bash
 streamlit run dashboard/app.py
@@ -184,63 +156,82 @@ streamlit run dashboard/app.py
 
 ---
 
-## Testing
-
-Run all tests:
+## ✅ Testing
 
 ```bash
 pytest tests/ -v
 ```
 
-Useful variants:
+Optional focused runs:
 
 ```bash
 pytest tests/test_pipeline.py -v
-pytest -q
+pytest tests/test_vision.py -v
+pytest tests/test_rag.py -v
 ```
 
 ---
 
-## Operational Guidance
+## 📁 Why `data/` is not on GitHub (but appears locally)
 
-For production readiness, consider the following:
+This is intentional and important.
 
-- **Model lifecycle:** version and pin all model artifacts.
-- **Data contracts:** enforce strict request/response schemas in API.
-- **Observability:** add structured logging, request tracing, and metrics.
-- **Caching:** cache embeddings and frequent retrieval queries.
-- **Guardrails:** validate image types/sizes and sanitize user text input.
-- **Deployment:** containerize API/dashboard and deploy behind a reverse proxy.
-- **Security:** store secrets in a vault/secret manager (not plaintext files).
+### Short answer
+
+- 🚫 `data/` is usually listed in `.gitignore`, so Git does **not** track or upload it.
+- 💻 When you run local setup/indexing scripts, they **create `data/` on your machine**.
+- 👀 Your coding editor (VS Code, Cursor, PyCharm, etc.) shows **local folders**, not only tracked Git files.
+
+So even if GitHub does not display `data/`, your editor will show it once created locally.
+
+### Why we do this
+
+Keeping `data/` out of GitHub helps avoid:
+
+- oversized repositories and slow clones,
+- committing generated artifacts repeatedly,
+- accidental exposure of local or licensed dataset outputs,
+- noisy diffs from frequently regenerated indexes.
+
+### Typical local workflow
+
+1. Clone repository from GitHub (no `data/` yet).
+2. Run setup/build commands (`scripts/build_vectordb.py`).
+3. Script generates local artifacts under `data/`.
+4. Editor displays the folder immediately.
+5. Git still ignores it, so `git status` stays clean for those files.
 
 ---
 
-## Troubleshooting
+## 🛠️ Operational notes
 
-- **Kaggle download fails**
-  - Ensure `~/.kaggle/kaggle.json` exists and has proper permissions.
-
-- **OpenAI errors (`401` / auth)**
-  - Verify `OPENAI_API_KEY` in `.env`.
-
-- **Slow retrieval/indexing**
-  - Rebuild vector DB on SSD and reduce dataset size for local testing.
-
-- **Torch/vision install issues**
-  - Match Torch build to your CUDA/CPU environment.
+- Rebuild the vector index whenever recipe corpus or embedding model changes.
+- For production hardening, add:
+  - containerized services,
+  - centralized logging/tracing,
+  - secret management,
+  - model/version pinning,
+  - request throttling and caching.
 
 ---
 
+## 🗺️ Roadmap
+
+- Add dietary and allergen-aware filtering.
 ## Roadmap
-
-- [ ] Implement ingredient confidence calibration across ensemble models.
-- [ ] Add recipe filtering by dietary constraints/allergens.
-- [ ] Add evaluation harness for retrieval precision/recall.
-- [ ] Add Docker + CI/CD pipeline.
-- [ ] Add end-to-end integration tests and benchmark suite.
+- Add the aspect of CAG as well, i.e., Caching instead of Retrieving by loading all content to the KV cache 
+- Add dietary and allergen-aware filters.
+- Add retrieval quality evaluation (Precision@K / Recall@K).
+- Add Dockerized local stack and CI checks.
+- Add feedback loop for ranking quality improvements.
 
 ---
 
-## License
+## 🤝 Contributing
 
-Add your license here (e.g., MIT, Apache-2.0).
+PRs and ideas are welcome. If you propose architecture or pipeline changes, include:
+
+- motivation,
+- impact on retrieval quality,
+- expected runtime/memory tradeoffs,
+- testing evidence.
