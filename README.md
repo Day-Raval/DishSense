@@ -328,10 +328,11 @@ pytest tests/test_pipeline.py -v
 6. **Allergen & diet taxonomy filters** beyond free-text preference string.
 7. **Robust schema validation** on LLM output with strict typed parsing.
 8. **CI pipeline** with lint/test checks and model-mocking for speed.
+9. **MLflow integration** with experiment tracking/test checks and model-versioning for maintainability.
 
 ---
 
-## Notes on local `data/`
+## Notes on local `data/.`
 
 `data/` is generated locally during ingestion and is usually gitignored.
 That keeps the repository small and avoids committing generated vector DB artifacts.
