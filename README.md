@@ -10,7 +10,6 @@ FRIDGE-RAG is a practical multimodal system that combines:
 
 ---
 
-
 <p align="left">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-blue" />
   <img alt="FastAPI" src="https://img.shields.io/badge/API-FastAPI-009688" />
