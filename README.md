@@ -45,8 +45,6 @@ Most demos stop at “object detection.” This project is built like a small pr
 
 ## 🧭 End-to-end architecture
 
-![FRIDGE-RAG workflow overview](docs/images/workflow-overview.svg)
-
 ### 🟢 Online inference flow (production-style)
 
 ```mermaid
