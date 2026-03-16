@@ -43,44 +43,74 @@ Most demos stop at “object detection.” This project is built like a small pr
 
 ---
 
-## End-to-end architecture
+## 🧭 End-to-end architecture
 
 ![FRIDGE-RAG workflow overview](docs/images/workflow-overview.svg)
 
-### Online inference flow
+### 🟢 Online inference flow (production-style)
 
-```text
-[Streamlit UI / Client]
-          |
-          v
-   [FastAPI /recommend]
-          |
-          v
- [src.pipeline.recommend_from_photo]
-      |             |
-      |             +--> [RAG Retriever: Chroma + embeddings]
-      v
- [Vision Ensemble: YOLO + DETR + CLIP]
-          |
-          +--> fused ingredients --> retrieve candidates --> LLM rerank
-                                                     |
-                                                     v
-                                [ranked recipes + coverage + reasons]
+```mermaid
+flowchart LR
+    subgraph Clients["🖥️ Client Layer"]
+        UI["🧪 Streamlit UI"]
+        APIClient["📱 API Client"]
+    end
+
+    subgraph Serving["🚦 Serving Layer"]
+        FastAPI["⚡ FastAPI /recommend"]
+        Pipeline["🧠 src.pipeline.recommend_from_photo"]
+    end
+
+    subgraph Vision["👁️ Vision Layer"]
+        YOLO["📦 YOLOv8"]
+        DETR["🧲 DETR"]
+        CLIP["🧷 CLIP"]
+        Fusion["🧮 Ensemble Fusion"]
+    end
+
+    subgraph Retrieval["🔎 Retrieval + Ranking Layer"]
+        Embed["🧾 Embeddings (MiniLM)"]
+        Chroma["🗂️ ChromaDB Retriever"]
+        Rerank["🤖 LLM Reranker (GPT-4o-mini)"]
+    end
+
+    subgraph Ops["🛡️ Production Controls"]
+        Config["⚙️ Env + thresholds"]
+        Guardrails["🚨 Validation + fallback"]
+        Logs["📊 Logging + health checks"]
+    end
+
+    UI --> FastAPI
+    APIClient --> FastAPI
+    FastAPI --> Pipeline
+
+    Pipeline --> YOLO
+    Pipeline --> DETR
+    Pipeline --> CLIP
+    YOLO --> Fusion
+    DETR --> Fusion
+    CLIP --> Fusion
+
+    Fusion --> Embed
+    Embed --> Chroma
+    Chroma --> Rerank
+
+    Config -.-> Pipeline
+    Guardrails -.-> Rerank
+    Logs -.-> FastAPI
+
+    Rerank --> Output["✅ Ranked recipes + explanations"]
 ```
 
-### Offline indexing flow
+### 🟣 Offline indexing flow (data pipeline)
 
-```text
-[Kaggle Food.com CSV]
-        |
-        v
-[scripts/build_vectordb.py]
-        |
-        v
-[src.rag.ingest.ingest_recipes]
-        |
-        v
-[ChromaDB persisted at data/recipe_db]
+```mermaid
+flowchart LR
+    Dataset["🧺 Kaggle Food.com CSV"] --> BuildScript["🛠️ scripts/build_vectordb.py"]
+    BuildScript --> Ingest["📥 src.rag.ingest.ingest_recipes"]
+    Ingest --> Chunk["🧩 Clean + chunk + metadata"]
+    Chunk --> EmbedOffline["🧾 Embedding generation"]
+    EmbedOffline --> Persist["💾 ChromaDB @ data/recipe_db"]
 ```
 
 ---
@@ -129,9 +159,9 @@ FRIDGE-RAG/
 
 ---
 
-## Core components
+## 🧱 Core components
 
-### 1) Vision detection (`src/vision/*`)
+### 1) 👁️ Vision detection (`src/vision/*`)
 - **YOLOv8**: fast baseline detector.
 - **DETR**: transformer detector, useful for different detection bias.
 - **CLIP**: zero-shot ingredient matching over candidate vocabulary.
@@ -141,14 +171,14 @@ FRIDGE-RAG/
   - apply multi-model boost,
   - threshold and rank.
 
-### 2) Retrieval (`src/rag/retriever.py`)
+### 2) 🔎 Retrieval (`src/rag/retriever.py`)
 - Embeds ingredient query with `all-MiniLM-L6-v2`.
 - Runs vector query in ChromaDB.
 - Supports metadata filters:
   - `max_calories`
   - `max_minutes`
 
-### 3) LLM reranking (`src/rag/reranker.py`)
+### 3) 🤖 LLM reranking (`src/rag/reranker.py`)
 - Sends candidate summaries + user preferences to OpenAI.
 - Returns JSON-ranked recipes with:
   - `coverage_pct`
@@ -157,24 +187,24 @@ FRIDGE-RAG/
   - `reason`
 - Fallback: similarity-order if JSON parse fails.
 
-### 4) API (`api/main.py`)
+### 4) ⚡ API (`api/main.py`)
 - `GET /health`: model/db health summary.
 - `POST /recommend`: image + optional constraints to recipe recommendations.
 
-### 5) Dashboard (`dashboard/app.py`)
+### 5) 🖥️ Dashboard (`dashboard/app.py`)
 - Upload image + sliders for filters.
 - Displays ingredient list and expandable recommendation cards.
 
 ---
 
-## Setup
+## 🛠️ Setup
 
-## 1) Prerequisites
+## 1) 📋 Prerequisites
 - Python **3.10+**
 - Kaggle API credentials (for dataset download)
 - OpenAI API key
 
-## 2) Install dependencies
+## 2) 📦 Install dependencies
 
 ```bash
 git clone <your-repo-url>
@@ -184,7 +214,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## 3) Configure environment
+## 3) ⚙️ Configure environment
 
 ```bash
 cp .env.example .env
@@ -196,7 +226,7 @@ Set key in `.env`:
 OPENAI_API_KEY=your_key_here
 ```
 
-## 4) Configure Kaggle credentials
+## 4) 🔐 Configure Kaggle credentials
 
 ```bash
 mkdir -p ~/.kaggle
@@ -204,7 +234,7 @@ echo '{"username":"YOUR_KAGGLE_USERNAME","key":"YOUR_KAGGLE_KEY"}' > ~/.kaggle/k
 chmod 600 ~/.kaggle/kaggle.json
 ```
 
-## 5) Build the vector DB
+## 5) 🧬 Build the vector DB
 
 ```bash
 python scripts/build_vectordb.py
@@ -220,19 +250,19 @@ python scripts/build_vectordb.py --batch-size 64
 
 ---
 
-## Run locally
+## ▶️ Run locally
 
-### Start API
+### ⚡ Start API
 ```bash
 uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Start dashboard
+### 🖥️ Start dashboard
 ```bash
 streamlit run dashboard/app.py
 ```
 
-### Quick health check
+### ❤️ Quick health check
 ```bash
 curl http://localhost:8000/health
 ```
