@@ -1,8 +1,8 @@
-# 🧊🍳 FRIDGE-RAG
+# 🧊🍳 DishSense
 
 **Fridge photo in → ranked, explainable recipes out.**
 
-FRIDGE-RAG is a practical multimodal system that combines:
+DishSense is a FRIDGE-RAG multimodal system that combines:
 - **Computer Vision** (YOLOv8 + DETR + CLIP) to detect ingredients from a fridge photo.
 - **RAG retrieval** (Sentence-Transformers + ChromaDB) to fetch relevant recipes.
 - **LLM reranking** (OpenAI GPT-4o-mini) to produce explainable final recommendations.
