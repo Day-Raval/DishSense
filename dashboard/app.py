@@ -15,27 +15,62 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("FridgeRAG")
-st.caption(
-    "Snap a photo of your fridge — get ranked recipe recommendations "
-    "based on exactly what you have."
+st.markdown(
+    """
+    <style>
+        .stApp {
+            background: linear-gradient(180deg, #f8fffb 0%, #ffffff 60%);
+        }
+        .fridge-hero {
+            background: linear-gradient(135deg, #e9f9ef 0%, #f4f0ff 100%);
+            border: 1px solid #d5eadc;
+            border-radius: 16px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 10px 24px rgba(40, 64, 53, 0.08);
+        }
+        .fridge-card {
+            border: 1px solid #e6ece7;
+            border-radius: 14px;
+            padding: 0.7rem 0.9rem;
+            margin-bottom: 0.8rem;
+            background: #ffffff;
+            box-shadow: 0 8px 18px rgba(14, 30, 20, 0.05);
+        }
+        .fridge-small {
+            color: #557464;
+            font-size: 0.92rem;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <div class="fridge-hero">
+        <h1>🥦 FridgeRAG</h1>
+        <p class="fridge-small">📸 Snap a photo of your fridge — get ranked recipe recommendations based on exactly what you have.</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 # ── Sidebar — filters and health check ───────────────────────────────────────
 with st.sidebar:
-    st.header("Filters")
+    st.header("⚙️ Filters")
     preferences  = st.text_input(
-        "Dietary preferences",
+        "🥗 Dietary preferences",
         placeholder="e.g. high protein, vegetarian, low carb",
     )
-    max_calories = st.slider("Max calories",        0, 1500, 0, step=50,
+    max_calories = st.slider("🔥 Max calories",        0, 1500, 0, step=50,
                              help="0 = no limit")
-    max_minutes  = st.slider("Max cook time (min)", 0, 120,  0, step=10,
+    max_minutes  = st.slider("⏱️ Max cook time (min)", 0, 120,  0, step=10,
                              help="0 = no limit")
-    top_n        = st.slider("Recipes to show",     1, 10,   5)
+    top_n        = st.slider("📚 Recipes to show",     1, 10,   5)
 
     st.divider()
-    st.caption("API status")
+    st.caption("🔌 API status")
     try:
         hres  = requests.get(f"{API_BASE}/health", timeout=3)
         hdata = hres.json()
@@ -48,7 +83,7 @@ with st.sidebar:
 
 # ── Main area — upload and results ───────────────────────────────────────────
 uploaded = st.file_uploader(
-    "Upload fridge photo",
+    "🧊 Upload fridge photo",
     type=["jpg", "jpeg", "png", "webp"],
 )
 
@@ -56,11 +91,13 @@ if uploaded:
     col_photo, col_results = st.columns([1, 2], gap="large")
 
     with col_photo:
+        st.markdown('<div class="fridge-card">', unsafe_allow_html=True)
         st.image(
             Image.open(uploaded),
-            caption="Your fridge",
+            caption="📷 Your fridge",
             use_column_width=True,
         )
+        st.markdown('</div>', unsafe_allow_html=True)
 
     with col_results:
         with st.spinner("Detecting ingredients and finding recipes..."):
@@ -94,7 +131,7 @@ if uploaded:
         ings = data.get("detected_ingredients", [])
         src  = data.get("model_sources", {})
 
-        st.subheader(f"Detected {len(ings)} ingredients")
+        st.subheader(f"🧪 Detected {len(ings)} ingredients")
         st.write(", ".join(f"`{i}`" for i in ings))
 
         if src:
@@ -108,7 +145,7 @@ if uploaded:
 
         # ── Recipe cards ──────────────────────────────────────────────────────
         recs = data.get("recommendations", [])
-        st.subheader(f"Top {len(recs)} recipes for you")
+        st.subheader(f"🍽️ Top {len(recs)} recipes for you")
 
         for rec in recs:
             coverage = rec.get("coverage_pct", 0)
@@ -124,10 +161,10 @@ if uploaded:
                 f"{color}  #{rank}  {name}  —  {coverage}% ingredient match"
             ):
                 c1, c2, c3, c4 = st.columns(4)
-                c1.metric("Calories",  f"{rec.get('calories',    0):.0f} kcal")
-                c2.metric("Protein",   f"{rec.get('protein_g',   0):.0f} g")
-                c3.metric("Cook time", f"{rec.get('minutes',     0)} min")
-                c4.metric("Nutrition", f"{rec.get('nutrition_score', 0)} / 10")
+                c1.metric("🔥 Calories",  f"{rec.get('calories',    0):.0f} kcal")
+                c2.metric("💪 Protein",   f"{rec.get('protein_g',   0):.0f} g")
+                c3.metric("⏱️ Cook time", f"{rec.get('minutes',     0)} min")
+                c4.metric("📊 Nutrition", f"{rec.get('nutrition_score', 0)} / 10")
 
                 missing = rec.get("missing_ingredients", [])
                 if missing:
