@@ -1,108 +1,152 @@
 # 🧊🍳 FRIDGE-RAG
 
-> **From fridge photo ➜ confident ingredients ➜ useful recipes**  
-> A practical, production-minded prototype that combines **computer vision** and **retrieval-augmented generation (RAG)** for real kitchen decisions.
+**Fridge photo in → ranked, explainable recipes out.**
+
+FRIDGE-RAG is a practical multimodal system that combines:
+- **Computer Vision** (YOLOv8 + DETR + CLIP) to detect ingredients from a fridge photo.
+- **RAG retrieval** (Sentence-Transformers + ChromaDB) to fetch relevant recipes.
+- **LLM reranking** (OpenAI GPT-4o-mini) to produce explainable final recommendations.
+- **FastAPI + Streamlit** for API-first serving plus a demo UI.
 
 ---
 
-## ✨ What this project does
+## Why this project is useful
 
-Most "what can I cook?" demos stop at simple ingredient detection. **FRIDGE-RAG** goes further:
-
-- 🥕 Detects fridge ingredients using an **ensemble of vision models**.
-- 📚 Retrieves relevant recipes from a **semantic vector database**.
-- 🧠 Re-ranks candidates with an LLM and provides **clear rationale**.
-- 🏗️ Separates concerns (API, orchestration, vision, retrieval, UI) for maintainability.
+Most demos stop at “object detection.” This project is built like a small production prototype:
+- Ensemble detection for stronger ingredient coverage.
+- Semantic retrieval with optional calorie/time filters.
+- Human-readable ranking reasons + missing ingredients.
+- Clear module boundaries (API, pipeline, vision, retrieval, UI, tests).
 
 ---
 
-## 🧭 End-to-end architecture
+## End-to-end architecture
 
-### 1) Runtime flow
+### Online inference flow
 
 ```text
-[Client App / Streamlit UI]
-            |
-            v
-      [FastAPI Gateway]
-            |
-            v
-   [Pipeline Orchestrator]
-     |               |
-     |               +--------------------------+
-     v                                          v
-[Vision Ensemble]                          [RAG Service]
-(YOLO + DETR + CLIP)        query ---> [Embedding + Chroma Retrieval]
-     |                                          |
-     +------ detected ingredients --------------+
-                         |
-                         v
-               [LLM Re-ranker / Explainer]
-                         |
-                         v
-         [Ranked recipe candidates + rationale]
+[Streamlit UI / Client]
+          |
+          v
+   [FastAPI /recommend]
+          |
+          v
+ [src.pipeline.recommend_from_photo]
+      |             |
+      |             +--> [RAG Retriever: Chroma + embeddings]
+      v
+ [Vision Ensemble: YOLO + DETR + CLIP]
+          |
+          +--> fused ingredients --> retrieve candidates --> LLM rerank
+                                                     |
+                                                     v
+                                [ranked recipes + coverage + reasons]
 ```
 
-### 2) Offline indexing flow
+### Offline indexing flow
 
 ```text
-[Kaggle recipe dataset]
-          |
-          v
- [scripts/build_vectordb.py]
-  - cleaning
-  - chunking/formatting
-  - embedding generation
-          |
-          v
-   [Local Chroma recipe index]
+[Kaggle Food.com CSV]
+        |
+        v
+[scripts/build_vectordb.py]
+        |
+        v
+[src.rag.ingest.ingest_recipes]
+        |
+        v
+[ChromaDB persisted at data/recipe_db]
 ```
 
 ---
 
-## 🗂️ Repository layout
+## Repository map (all tracked files)
 
-```bash
+```text
 FRIDGE-RAG/
-├── api/                  # FastAPI app + schemas
-├── dashboard/            # Streamlit front-end
-├── scripts/              # Offline jobs (index build)
-├── src/
-│   ├── pipeline.py       # End-to-end orchestration
-│   ├── config.py         # Runtime configuration
-│   ├── rag/              # Ingestion, retrieval, reranking
-│   └── vision/           # YOLO/DETR/CLIP + ensemble logic
-├── tests/                # Unit/integration-oriented tests
+├── README.md
 ├── requirements.txt
-└── README.md
+├── .env.example
+├── Sample-image.jpg
+├── api/
+│   ├── __init__.py
+│   ├── main.py                 # FastAPI app (/health, /recommend)
+│   └── schemas.py              # Pydantic response models
+├── dashboard/
+│   ├── __init__.py
+│   └── app.py                  # Streamlit UI client for API
+├── scripts/
+│   └── build_vectordb.py       # CLI wrapper to ingest recipe CSV into Chroma
+├── src/
+│   ├── __init__.py
+│   ├── config.py               # global constants (models, thresholds, paths)
+│   ├── pipeline.py             # online orchestration entrypoint
+│   ├── rag/
+│   │   ├── __init__.py
+│   │   ├── ingest.py           # CSV parsing + embedding + Chroma upsert
+│   │   ├── retriever.py        # semantic query + metadata filters
+│   │   └── reranker.py         # OpenAI LLM reranking + enrichment
+│   └── vision/
+│       ├── __init__.py
+│       ├── yolo_detector.py    # YOLO detector wrapper
+│       ├── detr_detector.py    # DETR detector wrapper
+│       ├── clip_detector.py    # CLIP zero-shot detector wrapper
+│       └── ensemble.py         # confidence fusion + dedupe
+└── tests/
+    ├── __init__.py
+    ├── test_pipeline.py        # pipeline behavior with mocks
+    ├── test_vision.py          # ensemble logic tests
+    └── test_rag.py             # retriever behavior tests
 ```
 
 ---
 
-## 🧰 Tech stack
+## Core components
 
-- ⚡ **Backend API:** FastAPI + Uvicorn
-- 🖥️ **UI:** Streamlit
-- 👁️ **Vision models:** YOLOv8, DETR, CLIP (ensemble strategy)
-- 🔎 **Embeddings:** sentence-transformers (`all-MiniLM-L6-v2`)
-- 🧱 **Vector store:** ChromaDB
-- 🤖 **LLM layer:** OpenAI models for reranking/explanations
-- 🍲 **Dataset:** Food.com Recipes and Reviews (Kaggle)
+### 1) Vision detection (`src/vision/*`)
+- **YOLOv8**: fast baseline detector.
+- **DETR**: transformer detector, useful for different detection bias.
+- **CLIP**: zero-shot ingredient matching over candidate vocabulary.
+- **Ensemble fusion**:
+  - normalize labels,
+  - average confidence,
+  - apply multi-model boost,
+  - threshold and rank.
 
-Dataset link: https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews/data
+### 2) Retrieval (`src/rag/retriever.py`)
+- Embeds ingredient query with `all-MiniLM-L6-v2`.
+- Runs vector query in ChromaDB.
+- Supports metadata filters:
+  - `max_calories`
+  - `max_minutes`
+
+### 3) LLM reranking (`src/rag/reranker.py`)
+- Sends candidate summaries + user preferences to OpenAI.
+- Returns JSON-ranked recipes with:
+  - `coverage_pct`
+  - `missing_ingredients`
+  - `nutrition_score`
+  - `reason`
+- Fallback: similarity-order if JSON parse fails.
+
+### 4) API (`api/main.py`)
+- `GET /health`: model/db health summary.
+- `POST /recommend`: image + optional constraints to recipe recommendations.
+
+### 5) Dashboard (`dashboard/app.py`)
+- Upload image + sliders for filters.
+- Displays ingredient list and expandable recommendation cards.
 
 ---
 
-## 🚀 Quick start
+## Setup
 
-### 1) Prerequisites
-
-- Python 3.10+
-- `pip` and virtual environment tooling
-- Kaggle API credentials
+## 1) Prerequisites
+- Python **3.10+**
+- Kaggle API credentials (for dataset download)
 - OpenAI API key
 
-### 2) Install
+## 2) Install dependencies
 
 ```bash
 git clone <your-repo-url>
@@ -112,19 +156,19 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3) Configure environment
+## 3) Configure environment
 
 ```bash
 cp .env.example .env
 ```
 
-Add your key:
+Set key in `.env`:
 
 ```env
-OPENAI_API_KEY=your_openai_key
+OPENAI_API_KEY=your_key_here
 ```
 
-### 4) Configure Kaggle credentials
+## 4) Configure Kaggle credentials
 
 ```bash
 mkdir -p ~/.kaggle
@@ -132,106 +176,116 @@ echo '{"username":"YOUR_KAGGLE_USERNAME","key":"YOUR_KAGGLE_KEY"}' > ~/.kaggle/k
 chmod 600 ~/.kaggle/kaggle.json
 ```
 
-### 5) Build the vector database
+## 5) Build the vector DB
 
 ```bash
 python scripts/build_vectordb.py
 ```
 
+Useful options:
+
+```bash
+python scripts/build_vectordb.py --help
+python scripts/build_vectordb.py --limit 10000
+python scripts/build_vectordb.py --batch-size 64
+```
+
 ---
 
-## ▶️ Run locally
+## Run locally
 
-### API
-
+### Start API
 ```bash
 uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Dashboard
-
+### Start dashboard
 ```bash
 streamlit run dashboard/app.py
 ```
 
+### Quick health check
+```bash
+curl http://localhost:8000/health
+```
+
 ---
 
-## ✅ Testing
+## API reference
+
+### `GET /health`
+
+**Response fields**:
+- `status`
+- `models_loaded`
+- `db_ready`
+- `recipe_count`
+
+### `POST /recommend`
+
+**Multipart form fields**:
+- `photo` (required): jpeg/png/webp
+- `preferences` (optional text)
+- `max_calories` (optional int; 0 = no limit)
+- `max_minutes` (optional int; 0 = no limit)
+- `top_n` (1-10)
+
+**Example curl**:
+
+```bash
+curl -X POST http://localhost:8000/recommend \
+  -F "photo=@Sample-image.jpg" \
+  -F "preferences=high protein, low carb" \
+  -F "max_calories=600" \
+  -F "max_minutes=30" \
+  -F "top_n=5"
+```
+
+---
+
+## Testing
+
+Run all tests:
 
 ```bash
 pytest tests/ -v
 ```
 
-Optional focused runs:
+Targeted runs:
 
 ```bash
-pytest tests/test_pipeline.py -v
 pytest tests/test_vision.py -v
 pytest tests/test_rag.py -v
+pytest tests/test_pipeline.py -v
 ```
 
 ---
 
-## 📁 Why `data/` is not on GitHub (but appears locally)
+## Common enhancements to add next
 
-This is intentional and important.
-
-### Short answer
-
-- 🚫 `data/` is usually listed in `.gitignore`, so Git does **not** track or upload it.
-- 💻 When you run local setup/indexing scripts, they **create `data/` on your machine**.
-- 👀 Your coding editor (VS Code, Cursor, PyCharm, etc.) shows **local folders**, not only tracked Git files.
-
-So even if GitHub does not display `data/`, your editor will show it once created locally.
-
-### Why we do this
-
-Keeping `data/` out of GitHub helps avoid:
-
-- oversized repositories and slow clones,
-- committing generated artifacts repeatedly,
-- accidental exposure of local or licensed dataset outputs,
-- noisy diffs from frequently regenerated indexes.
-
-### Typical local workflow
-
-1. Clone repository from GitHub (no `data/` yet).
-2. Run setup/build commands (`scripts/build_vectordb.py`).
-3. Script generates local artifacts under `data/`.
-4. Editor displays the folder immediately.
-5. Git still ignores it, so `git status` stays clean for those files.
+1. **Caching layer (CAG-style memory/cache)** for recurring user sessions.
+2. **Evaluation harness** for retrieval + ranking metrics (P@K, Recall@K, nDCG).
+3. **Observability**: tracing spans for detection/retrieval/rerank latency.
+4. **Containerization**: Docker + Compose for one-command local startup.
+5. **GPU/CPU profile modes** in config for faster fallback in low-resource envs.
+6. **Allergen & diet taxonomy filters** beyond free-text preference string.
+7. **Robust schema validation** on LLM output with strict typed parsing.
+8. **CI pipeline** with lint/test checks and model-mocking for speed.
 
 ---
 
-## 🛠️ Operational notes
+## Notes on local `data/`
 
-- Rebuild the vector index whenever recipe corpus or embedding model changes.
-- For production hardening, add:
-  - containerized services,
-  - centralized logging/tracing,
-  - secret management,
-  - model/version pinning,
-  - request throttling and caching.
+`data/` is generated locally during ingestion and is usually gitignored.
+That keeps the repository small and avoids committing generated vector DB artifacts.
 
 ---
 
-## 🗺️ Roadmap
+## License and contribution
 
-- Add dietary and allergen-aware filtering.
-## Roadmap
-- Add the aspect of CAG as well, i.e., Caching instead of Retrieving by loading all content to the KV cache 
-- Add dietary and allergen-aware filters.
-- Add retrieval quality evaluation (Precision@K / Recall@K).
-- Add Dockerized local stack and CI checks.
-- Add feedback loop for ranking quality improvements.
-
----
-
-## 🤝 Contributing
-
-PRs and ideas are welcome. If you propose architecture or pipeline changes, include:
-
+If you open PRs, include:
 - motivation,
-- impact on retrieval quality,
-- expected runtime/memory tradeoffs,
+- expected quality/runtime impact,
 - testing evidence.
+
+Contributions are welcome.
