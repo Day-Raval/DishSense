@@ -10,7 +10,7 @@ from PIL import Image
 API_BASE = "http://localhost:8000"
 
 st.set_page_config(
-    page_title="FridgeRAG",
+    page_title="DishSense: FridgeRAG",
     page_icon="🥦",
     layout="wide",
 )

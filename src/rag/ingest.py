@@ -47,23 +47,34 @@ def _parse_ingredients(raw) -> list:
 
 def _parse_time(raw) -> int:
     """
-    Convert ISO 8601 duration string to minutes.
-    Food.com uses formats like: PT30M, PT1H30M, PT2H
+    Convert ISO 8601 duration string to minutes with sanity clamping.
+    Food.com uses formats like: PT30M, PT1H30M, PT2H, PT6H
+
+    Clamping rules:
+        - Minimum: 5 minutes  (nothing takes less than 5 min)
+        - Maximum: 180 minutes (cap at 3 hours for realistic recipes)
+        - Unknown/zero: default to 30 minutes
     """
     if raw is None:
         return 30
     if isinstance(raw, (int, float)):
-        return int(raw) if not pd.isna(raw) else 30
+        val = int(raw) if not pd.isna(raw) else 30
+        return max(5, min(180, val))
     try:
-        raw_str = str(raw).upper().replace("PT", "")
+        raw_str = str(raw).upper().replace("PT", "").strip()
+        if not raw_str:
+            return 30
         minutes = 0
         if "H" in raw_str:
             parts    = raw_str.split("H")
             minutes += int(parts[0]) * 60
             raw_str  = parts[1] if len(parts) > 1 else ""
-        if "M" in raw_str:
+        if "M" in raw_str and raw_str.replace("M", "").strip():
             minutes += int(raw_str.replace("M", "").strip())
-        return minutes if minutes > 0 else 30
+        if minutes <= 0:
+            return 30
+        # Clamp to realistic range
+        return max(5, min(180, minutes))
     except Exception:
         return 30
 

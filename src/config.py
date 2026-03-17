@@ -1,3 +1,4 @@
+import torch
 import os
 from dotenv import load_dotenv # type: ignore
 
@@ -27,6 +28,76 @@ CHROMA_PATH     = "data/recipe_db"
 COLLECTION_NAME = "recipes"
 RETRIEVE_TOP_K  = 20
 RERANK_TOP_N    = 5
+
+# ── Enhancement 3: GPU / CPU profile modes ────────────────────────────────────
+#
+# COMPUTE_PROFILE controls which device and model sizes are used.
+#
+# Profiles:
+#   "gpu_full"   — Full models on GPU. Best quality. Needs NVIDIA GPU + CUDA.
+#                  YOLO: yolov8m, DETR: resnet-50, CLIP: ViT-L-14
+#
+#   "gpu_light"  — Lighter models on GPU. Good quality, faster inference.
+#                  YOLO: yolov8n, DETR: resnet-50, CLIP: ViT-B-32
+#
+#   "cpu_full"   — Full models on CPU. Slow but accurate. For dev machines.
+#                  YOLO: yolov8s, DETR: resnet-50, CLIP: ViT-B-32
+#
+#   "cpu_light"  — Smallest models on CPU. Fastest fallback. Default.
+#                  YOLO: yolov8n, DETR: resnet-50, CLIP: ViT-B-16
+#
+# Set COMPUTE_PROFILE in .env or let it auto-detect below.
+
+_profile_env = os.getenv("COMPUTE_PROFILE", "auto").strip().lower()
+
+# Auto-detect: use GPU profile if CUDA is available, else CPU light
+if _profile_env == "auto":
+    COMPUTE_PROFILE = "gpu_light" if torch.cuda.is_available() else "cpu_light"
+else:
+    COMPUTE_PROFILE = _profile_env
+
+# Profile settings map
+_PROFILES = {
+    "gpu_full":  {
+        "device":       "cuda",
+        "yolo_model":   "yolov8m.pt",
+        "clip_model":   "ViT-L-14",
+        "batch_size":   64,
+        "embed_model":  "all-mpnet-base-v2",   # higher quality embeddings
+    },
+    "gpu_light": {
+        "device":       "cuda",
+        "yolo_model":   "yolov8n.pt",
+        "clip_model":   "ViT-B-32",
+        "batch_size":   32,
+        "embed_model":  "all-MiniLM-L6-v2",
+    },
+    "cpu_full":  {
+        "device":       "cpu",
+        "yolo_model":   "yolov8s.pt",
+        "clip_model":   "ViT-B-32",
+        "batch_size":   32,
+        "embed_model":  "all-MiniLM-L6-v2",
+    },
+    "cpu_light": {
+        "device":       "cpu",
+        "yolo_model":   "yolov8n.pt",
+        "clip_model":   "ViT-B-16",
+        "batch_size":   16,
+        "embed_model":  "all-MiniLM-L6-v2",
+    },
+}
+
+# Apply profile — override defaults if profile exists
+_active = _PROFILES.get(COMPUTE_PROFILE, _PROFILES["cpu_light"])
+DEVICE       = _active["device"]
+YOLO_MODEL   = _active["yolo_model"]
+CLIP_MODEL   = _active["clip_model"]
+EMBED_MODEL  = _active["embed_model"]
+BATCH_SIZE   = _active["batch_size"]
+
+print(f"[config] Compute profile: {COMPUTE_PROFILE} | device: {DEVICE} | "
+      f"YOLO: {YOLO_MODEL} | CLIP: {CLIP_MODEL}")
 
 # ── Candidate ingredients for CLIP (200 items) ────────────────────────────────
 CLIP_CANDIDATES = [
