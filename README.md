@@ -19,10 +19,12 @@ DishSense is a FRIDGE-RAG multimodal system that combines:
 
 ## 🔄 Latest updates snapshot
 
-To keep this README aligned with the latest commits and additions:
-- `.env.example` now clearly documents **offline mode** and when `OPENAI_API_KEY` is required.
-- `USE_LLM_RERANKER=false` is documented as the recommended free/local default for development.
-- Runtime behavior and setup now reflect both **LLM reranking** and **local reranking** paths.
+To keep this README aligned with today's added/modified files and commits:
+- Added `src/evaluation.py`, a retrieval/ranking evaluation harness for **P@K, Recall@K, and nDCG@K**.
+- Updated `src/config.py` and `.env.example` with clearer compute/reranker configuration, including documented offline/local reranker usage.
+- Enhanced `src/rag/reranker.py` and `src/rag/ingest.py` behavior for stronger ranking/ingestion robustness.
+- Updated `dashboard/app.py` integration details to align with the latest API request flow.
+- Removed `docs/images/workflow-overview.svg` as part of deleting the `docs/images` directory.
 
 ## 📸 Project image context
 
@@ -121,9 +123,6 @@ FRIDGE-RAG/
 ├── requirements.txt
 ├── .env.example
 ├── Sample-image.jpg
-├── docs/
-│   └── images/
-│       └── workflow-overview.svg  # workflow diagram image used in README
 ├── api/
 │   ├── __init__.py
 │   ├── main.py                 # FastAPI app (/health, /recommend)
@@ -137,6 +136,7 @@ FRIDGE-RAG/
 │   ├── __init__.py
 │   ├── config.py               # global constants (models, thresholds, paths)
 │   ├── pipeline.py             # online orchestration entrypoint
+│   ├── evaluation.py           # retrieval/ranking metrics harness (P@K, Recall@K, nDCG)
 │   ├── rag/
 │   │   ├── __init__.py
 │   │   ├── ingest.py           # CSV parsing + embedding + Chroma upsert
@@ -321,7 +321,7 @@ pytest tests/test_pipeline.py -v
 ## Common enhancements to add next
 
 1. **Caching layer (CAG-style memory/cache)** for recurring user sessions.
-2. **Evaluation harness** for retrieval + ranking metrics (P@K, Recall@K, nDCG).
+2. **Expand the evaluation harness** with dataset slices, baselines, and automated reports.
 3. **Observability**: tracing spans for detection/retrieval/rerank latency.
 4. **Containerization**: Docker + Compose for one-command local startup.
 5. **GPU/CPU profile modes** in config for faster fallback in low-resource envs.
