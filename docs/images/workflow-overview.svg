@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="FRIDGE-RAG workflow overview">
+  <defs>
+    <style>
+      .title{font:700 28px Arial,sans-serif;fill:#0f172a}
+      .label{font:600 17px Arial,sans-serif;fill:#0f172a}
+      .sub{font:400 14px Arial,sans-serif;fill:#334155}
+      .box{fill:#f8fafc;stroke:#2563eb;stroke-width:2;rx:14}
+      .arrow{stroke:#0ea5e9;stroke-width:4;marker-end:url(#m)}
+    </style>
+    <marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0ea5e9"/>
+    </marker>
+  </defs>
+
+  <text x="40" y="48" class="title">FRIDGE-RAG Workflow (Online + Retrieval + Rerank)</text>
+
+  <rect x="40" y="90" width="200" height="120" class="box"/>
+  <text x="60" y="135" class="label">Input Image</text>
+  <text x="60" y="160" class="sub">Fridge photo upload</text>
+
+  <rect x="290" y="90" width="240" height="120" class="box"/>
+  <text x="310" y="135" class="label">Vision Ensemble</text>
+  <text x="310" y="160" class="sub">YOLO + DETR + CLIP</text>
+
+  <rect x="580" y="40" width="260" height="120" class="box"/>
+  <text x="600" y="85" class="label">Ingredient Query</text>
+  <text x="600" y="110" class="sub">Normalized ingredient list</text>
+
+  <rect x="580" y="220" width="260" height="120" class="box"/>
+  <text x="600" y="265" class="label">Chroma Retrieval</text>
+  <text x="600" y="290" class="sub">Semantic recipe candidates</text>
+
+  <rect x="890" y="90" width="270" height="120" class="box"/>
+  <text x="910" y="135" class="label">Reranker + Output</text>
+  <text x="910" y="160" class="sub">LLM/local ranking + reasons</text>
+
+  <line x1="240" y1="150" x2="290" y2="150" class="arrow"/>
+  <line x1="530" y1="120" x2="580" y2="100" class="arrow"/>
+  <line x1="530" y1="180" x2="580" y2="250" class="arrow"/>
+  <line x1="840" y1="280" x2="890" y2="150" class="arrow"/>
+  <line x1="840" y1="100" x2="890" y2="120" class="arrow"/>
+</svg>

@@ -1,14 +1,37 @@
-# 🧊🍳 FRIDGE-RAG
+# 🧊🍳 DishSense
 
 **Fridge photo in → ranked, explainable recipes out.**
 
-FRIDGE-RAG is a practical multimodal system that combines:
+DishSense is a FRIDGE-RAG multimodal system that combines:
 - **Computer Vision** (YOLOv8 + DETR + CLIP) to detect ingredients from a fridge photo.
 - **RAG retrieval** (Sentence-Transformers + ChromaDB) to fetch relevant recipes.
 - **LLM reranking** (OpenAI GPT-4o-mini) to produce explainable final recommendations.
 - **FastAPI + Streamlit** for API-first serving plus a demo UI.
 
 ---
+
+<p align="left">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-blue" />
+  <img alt="FastAPI" src="https://img.shields.io/badge/API-FastAPI-009688" />
+  <img alt="Streamlit" src="https://img.shields.io/badge/UI-Streamlit-FF4B4B" />
+  <img alt="Vector DB" src="https://img.shields.io/badge/VectorDB-Chroma-6E56CF" />
+</p>
+
+## 🔄 Latest updates snapshot
+
+To keep this README aligned with the latest commits and additions:
+- `.env.example` now clearly documents **offline mode** and when `OPENAI_API_KEY` is required.
+- `USE_LLM_RERANKER=false` is documented as the recommended free/local default for development.
+- Runtime behavior and setup now reflect both **LLM reranking** and **local reranking** paths.
+
+## 📸 Project image context
+
+Sample fridge image used for end-to-end testing:
+
+
+
+![Sample fridge image used by FRIDGE-RAG](Sample-image.jpg)
+
 
 ## Why this project is useful
 
@@ -20,42 +43,72 @@ Most demos stop at “object detection.” This project is built like a small pr
 
 ---
 
-## End-to-end architecture
+## 🧭 End-to-end architecture
 
-### Online inference flow
+### 🟢 Online inference flow (production-style)
 
-```text
-[Streamlit UI / Client]
-          |
-          v
-   [FastAPI /recommend]
-          |
-          v
- [src.pipeline.recommend_from_photo]
-      |             |
-      |             +--> [RAG Retriever: Chroma + embeddings]
-      v
- [Vision Ensemble: YOLO + DETR + CLIP]
-          |
-          +--> fused ingredients --> retrieve candidates --> LLM rerank
-                                                     |
-                                                     v
-                                [ranked recipes + coverage + reasons]
+```mermaid
+flowchart LR
+    subgraph Clients["🖥️ Client Layer"]
+        UI["🧪 Streamlit UI"]
+        APIClient["📱 API Client"]
+    end
+
+    subgraph Serving["🚦 Serving Layer"]
+        FastAPI["⚡ FastAPI /recommend"]
+        Pipeline["🧠 src.pipeline.recommend_from_photo"]
+    end
+
+    subgraph Vision["👁️ Vision Layer"]
+        YOLO["📦 YOLOv8"]
+        DETR["🧲 DETR"]
+        CLIP["🧷 CLIP"]
+        Fusion["🧮 Ensemble Fusion"]
+    end
+
+    subgraph Retrieval["🔎 Retrieval + Ranking Layer"]
+        Embed["🧾 Embeddings (MiniLM)"]
+        Chroma["🗂️ ChromaDB Retriever"]
+        Rerank["🤖 LLM Reranker (GPT-4o-mini)"]
+    end
+
+    subgraph Ops["🛡️ Production Controls"]
+        Config["⚙️ Env + thresholds"]
+        Guardrails["🚨 Validation + fallback"]
+        Logs["📊 Logging + health checks"]
+    end
+
+    UI --> FastAPI
+    APIClient --> FastAPI
+    FastAPI --> Pipeline
+
+    Pipeline --> YOLO
+    Pipeline --> DETR
+    Pipeline --> CLIP
+    YOLO --> Fusion
+    DETR --> Fusion
+    CLIP --> Fusion
+
+    Fusion --> Embed
+    Embed --> Chroma
+    Chroma --> Rerank
+
+    Config -.-> Pipeline
+    Guardrails -.-> Rerank
+    Logs -.-> FastAPI
+
+    Rerank --> Output["✅ Ranked recipes + explanations"]
 ```
 
-### Offline indexing flow
+### 🟣 Offline indexing flow (data pipeline)
 
-```text
-[Kaggle Food.com CSV]
-        |
-        v
-[scripts/build_vectordb.py]
-        |
-        v
-[src.rag.ingest.ingest_recipes]
-        |
-        v
-[ChromaDB persisted at data/recipe_db]
+```mermaid
+flowchart LR
+    Dataset["🧺 Kaggle Food.com CSV"] --> BuildScript["🛠️ scripts/build_vectordb.py"]
+    BuildScript --> Ingest["📥 src.rag.ingest.ingest_recipes"]
+    Ingest --> Chunk["🧩 Clean + chunk + metadata"]
+    Chunk --> EmbedOffline["🧾 Embedding generation"]
+    EmbedOffline --> Persist["💾 ChromaDB @ data/recipe_db"]
 ```
 
 ---
@@ -68,6 +121,9 @@ FRIDGE-RAG/
 ├── requirements.txt
 ├── .env.example
 ├── Sample-image.jpg
+├── docs/
+│   └── images/
+│       └── workflow-overview.svg  # workflow diagram image used in README
 ├── api/
 │   ├── __init__.py
 │   ├── main.py                 # FastAPI app (/health, /recommend)
@@ -101,9 +157,9 @@ FRIDGE-RAG/
 
 ---
 
-## Core components
+## 🧱 Core components
 
-### 1) Vision detection (`src/vision/*`)
+### 1) 👁️ Vision detection (`src/vision/*`)
 - **YOLOv8**: fast baseline detector.
 - **DETR**: transformer detector, useful for different detection bias.
 - **CLIP**: zero-shot ingredient matching over candidate vocabulary.
@@ -113,14 +169,14 @@ FRIDGE-RAG/
   - apply multi-model boost,
   - threshold and rank.
 
-### 2) Retrieval (`src/rag/retriever.py`)
+### 2) 🔎 Retrieval (`src/rag/retriever.py`)
 - Embeds ingredient query with `all-MiniLM-L6-v2`.
 - Runs vector query in ChromaDB.
 - Supports metadata filters:
   - `max_calories`
   - `max_minutes`
 
-### 3) LLM reranking (`src/rag/reranker.py`)
+### 3) 🤖 LLM reranking (`src/rag/reranker.py`)
 - Sends candidate summaries + user preferences to OpenAI.
 - Returns JSON-ranked recipes with:
   - `coverage_pct`
@@ -129,24 +185,24 @@ FRIDGE-RAG/
   - `reason`
 - Fallback: similarity-order if JSON parse fails.
 
-### 4) API (`api/main.py`)
+### 4) ⚡ API (`api/main.py`)
 - `GET /health`: model/db health summary.
 - `POST /recommend`: image + optional constraints to recipe recommendations.
 
-### 5) Dashboard (`dashboard/app.py`)
+### 5) 🖥️ Dashboard (`dashboard/app.py`)
 - Upload image + sliders for filters.
 - Displays ingredient list and expandable recommendation cards.
 
 ---
 
-## Setup
+## 🛠️ Setup
 
-## 1) Prerequisites
+## 1) 📋 Prerequisites
 - Python **3.10+**
 - Kaggle API credentials (for dataset download)
 - OpenAI API key
 
-## 2) Install dependencies
+## 2) 📦 Install dependencies
 
 ```bash
 git clone <your-repo-url>
@@ -156,7 +212,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## 3) Configure environment
+## 3) ⚙️ Configure environment
 
 ```bash
 cp .env.example .env
@@ -168,7 +224,7 @@ Set key in `.env`:
 OPENAI_API_KEY=your_key_here
 ```
 
-## 4) Configure Kaggle credentials
+## 4) 🔐 Configure Kaggle credentials
 
 ```bash
 mkdir -p ~/.kaggle
@@ -176,7 +232,7 @@ echo '{"username":"YOUR_KAGGLE_USERNAME","key":"YOUR_KAGGLE_KEY"}' > ~/.kaggle/k
 chmod 600 ~/.kaggle/kaggle.json
 ```
 
-## 5) Build the vector DB
+## 5) 🧬 Build the vector DB
 
 ```bash
 python scripts/build_vectordb.py
@@ -192,19 +248,19 @@ python scripts/build_vectordb.py --batch-size 64
 
 ---
 
-## Run locally
+## ▶️ Run locally
 
-### Start API
+### ⚡ Start API
 ```bash
 uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Start dashboard
+### 🖥️ Start dashboard
 ```bash
 streamlit run dashboard/app.py
 ```
 
-### Quick health check
+### ❤️ Quick health check
 ```bash
 curl http://localhost:8000/health
 ```
@@ -241,6 +297,7 @@ curl -X POST http://localhost:8000/recommend \
   -F "top_n=5"
 ```
 
+
 ---
 
 ## Testing
@@ -271,10 +328,11 @@ pytest tests/test_pipeline.py -v
 6. **Allergen & diet taxonomy filters** beyond free-text preference string.
 7. **Robust schema validation** on LLM output with strict typed parsing.
 8. **CI pipeline** with lint/test checks and model-mocking for speed.
+9. **MLflow integration** with experiment tracking/test checks and model-versioning for maintainability.
 
 ---
 
-## Notes on local `data/`
+## Notes on local `data/.`
 
 `data/` is generated locally during ingestion and is usually gitignored.
 That keeps the repository small and avoids committing generated vector DB artifacts.
@@ -289,3 +347,9 @@ If you open PRs, include:
 - testing evidence.
 
 Contributions are welcome.
+
+---
+
+## ✅ README compatibility note
+
+This revamp intentionally **preserves all existing README content** and adds an update layer for recent commits, plus contextual images where applicable.
